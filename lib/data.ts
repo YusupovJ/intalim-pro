@@ -19,8 +19,9 @@ export interface Question {
   video: string | null;
   static_order: boolean;
   is_new: boolean;
-  templates: number[];
+  old_templates: number[];
   edu_types: string[];
+  tickets: number[];
 }
 
 export const IMG_BASE = "https://back.eavtotalim.uz";

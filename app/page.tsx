@@ -7,14 +7,15 @@ import { useQuestions } from "@/lib/data";
 import { TICKET_COUNT } from "@/lib/tickets";
 import { getLastResult, useBookmarks, type TicketResult } from "@/lib/storage";
 
-function scoreTone(correct: number): {
+function scoreTone(correct: number, total: number): {
   pctText: string;
   pctBg: string;
   ring: string;
   label: string;
   labelColor: string;
 } {
-  if (correct >= 18)
+  const pct = total > 0 ? correct / total : 0;
+  if (pct >= 0.9)
     return {
       pctText: "text-emerald-300",
       pctBg: "bg-emerald-500/15",
@@ -22,7 +23,7 @@ function scoreTone(correct: number): {
       label: "Сдано",
       labelColor: "text-emerald-400",
     };
-  if (correct >= 14)
+  if (pct >= 0.7)
     return {
       pctText: "text-amber-300",
       pctBg: "bg-amber-500/15",
@@ -83,7 +84,7 @@ export default function TicketsListPage() {
   }, []);
 
   const stats = useMemo(() => {
-    const passed = results.filter((r) => r !== null && r.correct >= 18).length;
+    const passed = results.filter((r) => r !== null && r.total > 0 && r.correct / r.total >= 0.9).length;
     const attempted = results.filter((r) => r !== null).length;
     return { passed, attempted };
   }, [results]);
@@ -123,7 +124,7 @@ export default function TicketsListPage() {
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
           {Array.from({ length: TICKET_COUNT }, (_, i) => i + 1).map((id) => {
             const r = results[id - 1];
-            const tone = r ? scoreTone(r.correct) : null;
+            const tone = r ? scoreTone(r.correct, r.total) : null;
             const pct = r ? Math.round((r.correct / r.total) * 100) : null;
             return (
               <Link

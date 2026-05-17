@@ -60,9 +60,15 @@ export default function ResultScreen({
       <section
         className={`relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-b ${v.ring} bg-slate-900 p-6 sm:p-8 text-center`}
       >
-        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">{title}</div>
-        {subtitle && <div className="text-sm text-slate-500 mt-1">{subtitle}</div>}
-        <div className={`mt-4 text-6xl sm:text-7xl font-semibold tabular-nums ${v.color}`}>
+        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">
+          {title}
+        </div>
+        {subtitle && (
+          <div className="text-sm text-slate-500 mt-1">{subtitle}</div>
+        )}
+        <div
+          className={`mt-4 text-6xl sm:text-7xl font-semibold tabular-nums ${v.color}`}
+        >
           {correct}
           <span className="text-slate-500 mx-2 font-normal">/</span>
           {total}
@@ -99,7 +105,9 @@ export default function ResultScreen({
                   <span className="text-xs text-slate-500 w-6 shrink-0 tabular-nums">
                     {i + 1}.
                   </span>
-                  <span className="flex-1 min-w-0 text-sm text-slate-200 truncate">{q.text}</span>
+                  <span className="flex-1 min-w-0 text-sm text-slate-200 truncate">
+                    {q.text}
+                  </span>
                   <span className="text-slate-500 text-lg shrink-0 leading-none">
                     {isOpen ? "−" : "+"}
                   </span>
@@ -118,12 +126,15 @@ export default function ResultScreen({
                       {q.answers.map((ans) => {
                         const chosen = ans.id === a.chosenAnswerId;
                         const correctOne = ans.correct;
-                        let cls = "border-slate-800 bg-slate-900/60 text-slate-300";
+                        let cls =
+                          "border-slate-800 bg-slate-900/60 text-slate-300";
                         if (correctOne) {
-                          cls = "border-emerald-500/60 bg-emerald-500/10 text-emerald-100";
+                          cls =
+                            "border-emerald-500/60 bg-emerald-500/10 text-emerald-100";
                         }
                         if (chosen && !correctOne) {
-                          cls = "border-rose-500/60 bg-rose-500/10 text-rose-100";
+                          cls =
+                            "border-rose-500/60 bg-rose-500/10 text-rose-100";
                         }
                         return (
                           <div
@@ -163,7 +174,7 @@ export default function ResultScreen({
         </ul>
       </section>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-row gap-3">
         <button
           type="button"
           onClick={onRestart}

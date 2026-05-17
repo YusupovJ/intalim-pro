@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { IMG_BASE, type Answer, type Question } from "@/lib/data";
 import { shuffleRandom } from "@/lib/tickets";
 import AnswerButton from "./AnswerButton";
@@ -10,6 +10,7 @@ interface Props {
   question: Question;
   number?: number;
   reveal?: boolean;
+  isActive?: boolean;
   initialSelectedId?: number | null;
   onAnswered?: (chosenId: number, isCorrect: boolean) => void;
   onNext?: () => void;
@@ -21,6 +22,7 @@ export default function QuestionCard({
   question,
   number,
   reveal = false,
+  isActive = true,
   initialSelectedId = null,
   onAnswered,
   onNext,
@@ -45,10 +47,15 @@ export default function QuestionCard({
     onAnswered?.(a.id, a.correct);
   };
 
+  const stateRef = useRef({ locked, orderedAnswers, handleSelect, onNext });
+  stateRef.current = { locked, orderedAnswers, handleSelect, onNext };
+
   useEffect(() => {
-    if (!onNext && !onAnswered) return;
+    if (!isActive) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)
+        return;
+      const { locked, orderedAnswers, handleSelect, onNext } = stateRef.current;
       const fnMatch = /^F([1-9])$/.exec(e.key);
       if (!locked && fnMatch) {
         const idx = Number(fnMatch[1]);
@@ -58,16 +65,14 @@ export default function QuestionCard({
           return;
         }
       }
-      if (locked && (e.key === "Enter" || e.key === " ")) {
-        if (onNext) {
-          e.preventDefault();
-          onNext();
-        }
+      if (locked && onNext && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault();
+        onNext();
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  });
+  }, [isActive]);
 
   return (
     <article className="rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6 shadow-xl shadow-black/20">
@@ -87,11 +92,13 @@ export default function QuestionCard({
       </header>
 
       {question.image && (
-        <div className="mb-5 flex justify-center">
+        <div className="mb-5 text-center">
           <img
             src={IMG_BASE + question.image}
             alt=""
-            className="max-w-full max-h-80 rounded-xl border border-slate-800 bg-slate-950 object-contain"
+            loading="lazy"
+            decoding="async"
+            className="inline-block max-w-full max-h-80 rounded-xl border border-slate-800 bg-slate-950 object-contain"
           />
         </div>
       )}

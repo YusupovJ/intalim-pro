@@ -31,12 +31,11 @@ export default function BookmarksPage() {
     return (
       <>
         <AppHeader />
-        <main className="mx-auto max-w-3xl px-4 py-4 sm:py-6 flex-1">
+        <main className="mx-auto w-full max-w-3xl px-4 py-4 sm:py-6 flex-1">
           <SolveFlow
             questions={bookmarked}
             title="Закладки"
             subtitle={`${bookmarked.length} ${pluralize(bookmarked.length)}`}
-            shuffleQuestions={false}
             resultTitle="Закладки"
             resultSubtitle={`${bookmarked.length} ${pluralize(bookmarked.length)}`}
             exitLabel="К закладкам"
@@ -50,7 +49,7 @@ export default function BookmarksPage() {
   return (
     <>
       <AppHeader />
-      <main className="mx-auto max-w-3xl px-4 py-5 sm:py-8 flex-1">
+      <main className="mx-auto w-full max-w-3xl px-4 py-5 sm:py-8 flex-1">
         <div className="mb-5 sm:mb-6 flex items-end justify-between gap-3">
           <div>
             <h1 className="text-xl sm:text-2xl font-semibold text-slate-100">Закладки</h1>

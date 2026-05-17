@@ -26,7 +26,7 @@ export default function TicketSolvePage({ params }: { params: Promise<{ id: stri
     return (
       <>
         <AppHeader />
-        <main className="mx-auto max-w-3xl px-4 py-10 flex-1 text-center">
+        <main className="mx-auto w-full max-w-3xl px-4 py-10 flex-1 text-center">
           <h1 className="text-xl text-slate-100 mb-3">Билет не найден</h1>
           <Link href="/" className="text-blue-400 hover:text-blue-300">
             К списку билетов
@@ -40,7 +40,7 @@ export default function TicketSolvePage({ params }: { params: Promise<{ id: stri
     return (
       <>
         <AppHeader />
-        <main className="mx-auto max-w-3xl px-4 py-10 flex-1">
+        <main className="mx-auto w-full max-w-3xl px-4 py-10 flex-1">
           <div className="text-slate-400 text-sm">Загрузка билета…</div>
         </main>
       </>
@@ -50,11 +50,10 @@ export default function TicketSolvePage({ params }: { params: Promise<{ id: stri
   return (
     <>
       <AppHeader />
-      <main className="mx-auto max-w-3xl px-4 py-4 sm:py-6 flex-1">
+      <main className="mx-auto w-full max-w-3xl px-4 py-4 sm:py-6 flex-1">
         <SolveFlow
           questions={ticketQs}
           title={`Билет ${ticketId}`}
-          shuffleQuestions
           resultTitle={`Билет ${ticketId}`}
           onExit={() => router.push("/")}
           onComplete={(correct, total) =>
