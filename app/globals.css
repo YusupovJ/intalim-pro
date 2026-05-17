@@ -17,6 +17,9 @@ body {
     ),
     radial-gradient(900px 500px at -10% 10%, rgba(99, 102, 241, 0.06), transparent 60%);
   background-attachment: fixed;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 * {

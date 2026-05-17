@@ -58,9 +58,13 @@ interface StatProps {
 
 function Stat({ label, value, accent }: StatProps) {
   return (
-    <div className="flex-1 sm:flex-none rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-3 sm:px-5 sm:py-4 min-w-32">
-      <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
-      <div className={`mt-1 text-2xl font-semibold tabular-nums ${accent ?? "text-slate-100"}`}>
+    <div className="min-w-0 rounded-xl sm:rounded-2xl border border-slate-800 bg-slate-900/60 px-3 py-2.5 sm:px-5 sm:py-4 sm:min-w-32">
+      <div className="text-[10px] sm:text-[11px] uppercase tracking-[0.14em] text-slate-500 truncate">
+        {label}
+      </div>
+      <div
+        className={`mt-1 text-xl sm:text-2xl font-semibold tabular-nums truncate ${accent ?? "text-slate-100"}`}
+      >
         {value}
       </div>
     </div>
@@ -100,13 +104,13 @@ export default function TicketsListPage() {
                   : `${TICKET_COUNT} билетов · по 20 вопросов в каждом`}
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:flex sm:gap-3">
               <Stat
                 label="Решено"
                 value={
                   <>
                     {stats.attempted}
-                    <span className="text-slate-600 text-base">/{TICKET_COUNT}</span>
+                    <span className="text-slate-600 text-sm sm:text-base">/{TICKET_COUNT}</span>
                   </>
                 }
               />
