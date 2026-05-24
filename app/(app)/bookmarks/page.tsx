@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import AppHeader from "@/components/AppHeader";
 import SolveFlow from "@/components/SolveFlow";
 import StarButton from "@/components/StarButton";
-import { IMG_BASE, useQuestions, type Question } from "@/lib/data";
+import { IMG_BASE } from "@/lib/data";
+import { getQuestionsByIds } from "@/lib/actions";
 import { useBookmarks } from "@/lib/storage";
 
 function pluralize(n: number): string {
@@ -17,15 +19,17 @@ function pluralize(n: number): string {
 }
 
 export default function BookmarksPage() {
-  const allQuestions = useQuestions();
-  const bookmarkIds = useBookmarks();
+  const { ids: bookmarkIds, isLoading: bookmarksLoading } = useBookmarks();
   const [mode, setMode] = useState<"list" | "solve">("list");
 
-  const bookmarked: Question[] = useMemo(() => {
-    if (!allQuestions) return [];
-    const byId = new Map(allQuestions.map((q) => [q.id, q]));
-    return bookmarkIds.map((id) => byId.get(id)).filter((q): q is Question => q !== undefined);
-  }, [allQuestions, bookmarkIds]);
+  const { data: bookmarked = [], isLoading: questionsLoading } = useQuery({
+    queryKey: ["bookmark-questions", bookmarkIds],
+    queryFn: () => getQuestionsByIds(bookmarkIds),
+    enabled: !bookmarksLoading,
+    staleTime: 5 * 60_000,
+  });
+
+  const initialLoading = bookmarksLoading || questionsLoading;
 
   if (mode === "solve" && bookmarked.length > 0) {
     return (
@@ -70,7 +74,7 @@ export default function BookmarksPage() {
           )}
         </div>
 
-        {allQuestions === null ? (
+        {initialLoading ? (
           <div className="text-slate-400 text-sm">Загрузка…</div>
         ) : bookmarked.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-900/40 p-8 sm:p-10 text-center">

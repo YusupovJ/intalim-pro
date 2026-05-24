@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
 import type { Question } from "@/lib/data";
 import QuestionCard from "./QuestionCard";
 import QuestionNavigator, { type NavState } from "./QuestionNavigator";
@@ -28,32 +29,40 @@ export default function SolveFlow({
   onComplete,
 }: Props) {
   const total = questions.length;
-  const trackRef = useRef<HTMLDivElement>(null);
-  const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: "start",
+    containScroll: "trimSnaps",
+  });
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [trackHeight, setTrackHeight] = useState<number | undefined>(undefined);
   const [answers, setAnswers] = useState<(AnswerRecord | undefined)[]>([]);
   const [finished, setFinished] = useState(false);
   const [resultReported, setResultReported] = useState(false);
 
   useEffect(() => {
-    const slide = slideRefs.current[currentIndex];
-    if (!slide) return;
-    const update = () => setTrackHeight(slide.offsetHeight);
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(slide);
-    return () => ro.disconnect();
-  }, [currentIndex]);
+    if (!emblaApi) return;
+    const onSelect = () => setCurrentIndex(emblaApi.selectedScrollSnap());
+    emblaApi.on("select", onSelect);
+    onSelect();
+    return () => {
+      emblaApi.off("select", onSelect);
+    };
+  }, [emblaApi]);
 
+  // Сброс состояния — только на смену вопросов (новый билет / новый набор закладок).
+  // emblaApi нельзя класть сюда: он становится undefined при показе ResultScreen
+  // (Embla-контейнер исчезает из DOM), эффект перезапускался бы и обнулял finished.
   useEffect(() => {
     setAnswers([]);
-    setCurrentIndex(0);
     setFinished(false);
     setResultReported(false);
-    if (trackRef.current) trackRef.current.scrollLeft = 0;
   }, [questions]);
+
+  // Перемотка в начало — отдельным эффектом. Если emblaApi появился позже (на ре-маунте
+  // карусели после restart), просто скроллим в 0 — это безопасный no-op если уже там.
+  useEffect(() => {
+    emblaApi?.scrollTo(0, true);
+  }, [emblaApi, questions]);
 
   useEffect(() => {
     if (!finished || resultReported || !onComplete) return;
@@ -64,15 +73,11 @@ export default function SolveFlow({
 
   const goTo = useCallback(
     (i: number) => {
-      const el = trackRef.current;
-      if (!el || i < 0 || i >= total) return;
-      const distance = Math.abs(i - currentIndex);
-      el.scrollTo({
-        left: i * el.clientWidth,
-        behavior: distance <= 1 ? "smooth" : "auto",
-      });
+      if (!emblaApi || i < 0 || i >= total) return;
+      const distance = Math.abs(i - emblaApi.selectedScrollSnap());
+      emblaApi.scrollTo(i, distance > 1);
     },
-    [currentIndex, total],
+    [emblaApi, total],
   );
 
   const finishTest = useCallback(() => {
@@ -95,21 +100,52 @@ export default function SolveFlow({
     [questions],
   );
 
-  const onScroll = useCallback(() => {
-    const el = trackRef.current;
-    if (!el || el.clientWidth === 0) return;
-    const idx = Math.round(el.scrollLeft / el.clientWidth);
-    if (idx >= 0 && idx < total) setCurrentIndex(idx);
-  }, [total]);
-
   const restart = useCallback(() => {
     setAnswers([]);
-    setCurrentIndex(0);
     setFinished(false);
     setResultReported(false);
-    if (trackRef.current) trackRef.current.scrollLeft = 0;
+    emblaApi?.scrollTo(0, true);
     if (typeof window !== "undefined") window.scrollTo({ top: 0 });
-  }, []);
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const handler = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
+      if (e.key === "F6") {
+        e.preventDefault();
+        emblaApi.scrollPrev();
+      } else if (e.key === "F7") {
+        e.preventDefault();
+        emblaApi.scrollNext();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [emblaApi]);
+
+  // Embla AutoHeight плагин не справляется с lazy-загрузкой картинок (не пересчитывает
+  // viewport после init). Делаем это руками: пишем height активного слайда напрямую
+  // в viewport.style.height. CSS-transition сглаживает изменения.
+  useEffect(() => {
+    if (!emblaApi) return;
+    const active = emblaApi.slideNodes()[currentIndex];
+    const viewport = emblaApi.rootNode();
+    if (!active || !viewport) return;
+
+    const apply = () => {
+      viewport.style.height = `${active.offsetHeight}px`;
+    };
+    apply();
+
+    const ro = new ResizeObserver(apply);
+    ro.observe(active);
+    return () => ro.disconnect();
+  }, [emblaApi, currentIndex]);
 
   if (finished) {
     const fullAnswers: AnswerRecord[] = questions.map(
@@ -175,34 +211,28 @@ export default function SolveFlow({
       </div>
 
       <div
-        ref={trackRef}
-        onScroll={onScroll}
-        className="-mx-4 sm:mx-0 flex items-start overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide overscroll-x-contain transition-[height] duration-150"
-        style={{
-          scrollBehavior: "auto",
-          height: trackHeight !== undefined ? `${trackHeight}px` : undefined,
-        }}
+        className="-mx-4 sm:mx-0 overflow-hidden transition-[height] duration-150 ease-out"
+        ref={emblaRef}
       >
-        {questions.map((q, i) => (
-          <div
-            key={q.id}
-            ref={(el) => {
-              slideRefs.current[i] = el;
-            }}
-            className="w-full min-w-0 shrink-0 snap-center px-4 sm:px-0"
-            aria-hidden={i !== currentIndex}
-          >
-            <QuestionCard
-              question={q}
-              number={i + 1}
-              isActive={i === currentIndex}
-              initialSelectedId={answers[i]?.chosenAnswerId ?? null}
-              onAnswered={(cid, ok) => handleAnswered(i, cid, ok)}
-              onNext={i === total - 1 ? finishTest : () => goTo(i + 1)}
-              nextLabel={i === total - 1 ? "Завершить" : "Дальше"}
-            />
-          </div>
-        ))}
+        <div className="flex items-start gap-4">
+          {questions.map((q, i) => (
+            <div
+              key={q.id}
+              className="flex-[0_0_100%] min-w-0 px-4 sm:px-0"
+              aria-hidden={i !== currentIndex}
+            >
+              <QuestionCard
+                question={q}
+                number={i + 1}
+                isActive={i === currentIndex}
+                initialSelectedId={answers[i]?.chosenAnswerId ?? null}
+                onAnswered={(cid, ok) => handleAnswered(i, cid, ok)}
+                onNext={i === total - 1 ? finishTest : () => goTo(i + 1)}
+                nextLabel={i === total - 1 ? "Завершить" : "Дальше"}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="mt-5">
@@ -223,7 +253,10 @@ export default function SolveFlow({
           ← Назад
         </button>
         <span className="hidden sm:inline text-xs text-slate-500 text-center">
-          Свайп · F1–F9 · Enter/Space
+          Свайп · F6/F7 — навигация · F1–F9 — ответ · Enter/Space — дальше
+        </span>
+        <span className="sm:hidden text-xs text-slate-500 text-center">
+          Свайп для навигации
         </span>
         {isLast ? (
           <button

@@ -1,6 +1,6 @@
 "use client";
 
-import { toggleBookmark, useIsBookmarked } from "@/lib/storage";
+import { useIsBookmarked, useToggleBookmark } from "@/lib/storage";
 
 interface Props {
   qId: number;
@@ -9,6 +9,7 @@ interface Props {
 
 export default function StarButton({ qId, size = "md" }: Props) {
   const active = useIsBookmarked(qId);
+  const toggle = useToggleBookmark();
   const sz = size === "sm" ? "h-9 w-9 text-lg" : "h-11 w-11 text-2xl";
 
   return (
@@ -16,7 +17,7 @@ export default function StarButton({ qId, size = "md" }: Props) {
       type="button"
       onClick={(e) => {
         e.stopPropagation();
-        toggleBookmark(qId);
+        toggle(qId);
       }}
       aria-label={active ? "Убрать из закладок" : "В закладки"}
       aria-pressed={active}

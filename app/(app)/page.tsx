@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import AppHeader from "@/components/AppHeader";
-import { useQuestions } from "@/lib/data";
 import { TICKET_COUNT } from "@/lib/tickets";
-import { getLastResult, useBookmarks, type TicketResult } from "@/lib/storage";
+import { useAllResults, useBookmarks } from "@/lib/storage";
 
 function scoreTone(correct: number, total: number): {
   pctText: string;
@@ -73,21 +72,18 @@ function Stat({ label, value, accent }: StatProps) {
 }
 
 export default function TicketsListPage() {
-  const questions = useQuestions();
-  const bookmarkIds = useBookmarks();
-  const [results, setResults] = useState<(TicketResult | null)[]>([]);
-
-  useEffect(() => {
-    const arr: (TicketResult | null)[] = [];
-    for (let i = 1; i <= TICKET_COUNT; i++) arr.push(getLastResult(i));
-    setResults(arr);
-  }, []);
+  const { ids: bookmarkIds } = useBookmarks();
+  const { byTicketId } = useAllResults();
 
   const stats = useMemo(() => {
-    const passed = results.filter((r) => r !== null && r.total > 0 && r.correct / r.total >= 0.9).length;
-    const attempted = results.filter((r) => r !== null).length;
+    let passed = 0;
+    let attempted = 0;
+    byTicketId.forEach((r) => {
+      attempted += 1;
+      if (r.total > 0 && r.correct / r.total >= 0.9) passed += 1;
+    });
     return { passed, attempted };
-  }, [results]);
+  }, [byTicketId]);
 
   return (
     <>
@@ -100,9 +96,7 @@ export default function TicketsListPage() {
                 Билеты ПДД
               </h1>
               <p className="text-slate-400 mt-2 text-sm sm:text-base">
-                {questions === null
-                  ? "Загрузка вопросов…"
-                  : `${TICKET_COUNT} билетов · по 20 вопросов в каждом`}
+                {TICKET_COUNT} билетов · по 20 вопросов в каждом
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2 sm:flex sm:gap-3">
@@ -123,7 +117,7 @@ export default function TicketsListPage() {
 
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
           {Array.from({ length: TICKET_COUNT }, (_, i) => i + 1).map((id) => {
-            const r = results[id - 1];
+            const r = byTicketId.get(id) ?? null;
             const tone = r ? scoreTone(r.correct, r.total) : null;
             const pct = r ? Math.round((r.correct / r.total) * 100) : null;
             return (

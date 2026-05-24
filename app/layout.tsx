@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import QueryProvider from "@/components/QueryProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -29,7 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" className="h-full antialiased">
-      <body className="min-h-full flex flex-col text-slate-200">{children}</body>
+      <body className="min-h-full flex flex-col text-slate-200">
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   );
 }
