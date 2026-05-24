@@ -6,6 +6,7 @@ import type { Question } from "@/lib/data";
 import QuestionCard from "./QuestionCard";
 import QuestionNavigator, { type NavState } from "./QuestionNavigator";
 import ResultScreen, { type AnswerRecord } from "./ResultScreen";
+import StarButton from "./StarButton";
 
 interface Props {
   questions: Question[];
@@ -170,8 +171,6 @@ export default function SolveFlow({
   }
 
   const isLast = currentIndex === total - 1;
-  const answeredCount = answers.filter((a) => a !== undefined).length;
-  const progressPct = total > 0 ? (answeredCount / total) * 100 : 0;
 
   const navStates: NavState[] = questions.map((_, i) => {
     const a = answers[i];
@@ -184,46 +183,43 @@ export default function SolveFlow({
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-3 mb-4">
-        <div className="min-w-0">
-          <div className="text-base sm:text-lg font-semibold text-slate-100 truncate">
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <div className="min-w-0 flex items-baseline gap-2">
+          <span className="text-base sm:text-lg font-semibold text-slate-100 truncate">
             {title}
-          </div>
-          <div className="text-sm text-slate-400 tabular-nums">
-            {currentIndex + 1} <span className="text-slate-600">/</span> {total}{" "}
-            · <span className="text-slate-500">отвечено {answeredCount}</span>
-          </div>
+          </span>
+          <span className="text-sm text-slate-500 tabular-nums shrink-0">
+            {currentIndex + 1}/{total}
+          </span>
         </div>
-        <button
-          type="button"
-          onClick={onExit}
-          className="h-10 px-3 rounded-lg border border-slate-700 hover:border-slate-500 hover:bg-slate-800/50 text-sm text-slate-300 transition-colors"
-        >
-          Выйти
-        </button>
-      </div>
-
-      <div className="mb-4 h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
-        <div
-          className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-150"
-          style={{ width: `${progressPct}%` }}
-        />
+        <div className="flex items-center gap-1.5 shrink-0">
+          {questions[currentIndex] && (
+            <StarButton qId={questions[currentIndex].id} size="sm" />
+          )}
+          <button
+            type="button"
+            onClick={finishTest}
+            className="h-9 px-3.5 rounded-lg border-2 border-rose-500/70 text-rose-300 hover:bg-rose-500/10 active:bg-rose-500/20 text-sm font-medium transition-colors"
+          >
+            Завершить
+          </button>
+        </div>
       </div>
 
       <div
         className="-mx-4 sm:mx-0 overflow-hidden transition-[height] duration-150 ease-out"
         ref={emblaRef}
+        style={{ minHeight: "calc(100dvh - 6rem)" }}
       >
         <div className="flex items-start gap-4">
           {questions.map((q, i) => (
             <div
               key={q.id}
-              className="flex-[0_0_100%] min-w-0 px-4 sm:px-0"
+              className="flex-[0_0_100%] min-w-0 px-4 sm:px-0 pb-36 sm:pb-40"
               aria-hidden={i !== currentIndex}
             >
               <QuestionCard
                 question={q}
-                number={i + 1}
                 isActive={i === currentIndex}
                 initialSelectedId={answers[i]?.chosenAnswerId ?? null}
                 onAnswered={(cid, ok) => handleAnswered(i, cid, ok)}
@@ -235,47 +231,52 @@ export default function SolveFlow({
         </div>
       </div>
 
-      <div className="mt-5">
-        <QuestionNavigator
-          states={navStates}
-          currentIndex={currentIndex}
-          onSelect={goTo}
-        />
-      </div>
+      <div
+        className="fixed bottom-0 left-0 right-0 z-20 border-t border-slate-800 bg-slate-950/85 backdrop-blur-md"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="mx-auto w-full max-w-3xl px-4 pt-3 pb-3">
+          <QuestionNavigator
+            states={navStates}
+            currentIndex={currentIndex}
+            onSelect={goTo}
+          />
 
-      <div className="mt-4 flex items-center justify-between gap-2">
-        <button
-          type="button"
-          onClick={canGoPrev ? () => goTo(currentIndex - 1) : undefined}
-          disabled={!canGoPrev}
-          className="h-9 px-3 rounded-md text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 disabled:text-slate-700 disabled:hover:bg-transparent transition-colors"
-        >
-          ← Назад
-        </button>
-        <span className="hidden sm:inline text-xs text-slate-500 text-center">
-          Свайп · F6/F7 — навигация · F1–F9 — ответ · Enter/Space — дальше
-        </span>
-        <span className="sm:hidden text-xs text-slate-500 text-center">
-          Свайп для навигации
-        </span>
-        {isLast ? (
-          <button
-            type="button"
-            onClick={finishTest}
-            className="h-9 px-3 rounded-md text-sm font-medium text-blue-400 hover:text-blue-300 hover:bg-slate-800/60 transition-colors"
-          >
-            Завершить →
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={canGoNext ? () => goTo(currentIndex + 1) : undefined}
-            disabled={!canGoNext}
-            className="h-9 px-3 rounded-md text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 disabled:text-slate-700 disabled:hover:bg-transparent transition-colors"
-          >
-            Вперёд →
-          </button>
-        )}
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={canGoPrev ? () => goTo(currentIndex - 1) : undefined}
+              disabled={!canGoPrev}
+              className="h-9 px-3 rounded-md text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 disabled:text-slate-700 disabled:hover:bg-transparent transition-colors"
+            >
+              ← Назад
+            </button>
+            <span className="hidden sm:inline text-xs text-slate-500 text-center">
+              Свайп · F6/F7 — навигация · F1–F9 — ответ · Enter/Space — дальше
+            </span>
+            <span className="sm:hidden text-xs text-slate-500 text-center">
+              Свайп для навигации
+            </span>
+            {isLast ? (
+              <button
+                type="button"
+                onClick={finishTest}
+                className="h-9 px-3 rounded-md text-sm font-medium text-blue-400 hover:text-blue-300 hover:bg-slate-800/60 transition-colors"
+              >
+                Завершить →
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={canGoNext ? () => goTo(currentIndex + 1) : undefined}
+                disabled={!canGoNext}
+                className="h-9 px-3 rounded-md text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 disabled:text-slate-700 disabled:hover:bg-transparent transition-colors"
+              >
+                Вперёд →
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

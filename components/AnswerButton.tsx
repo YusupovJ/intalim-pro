@@ -9,16 +9,16 @@ interface Props {
 }
 
 const STATE_CLASSES: Record<Props["state"], string> = {
-  idle: "border-slate-800 bg-slate-950/40 hover:border-slate-600 hover:bg-slate-800/50 text-slate-100",
-  correct: "border-emerald-500/70 bg-emerald-500/15 text-emerald-100 ring-1 ring-emerald-500/30",
-  wrong: "border-rose-500/70 bg-rose-500/15 text-rose-100 ring-1 ring-rose-500/30",
-  missed: "border-emerald-500/40 bg-emerald-500/[0.07] text-emerald-100/90",
+  idle: "border-slate-800 bg-slate-950/60 hover:border-slate-600 hover:bg-slate-800/60 text-slate-100",
+  correct: "border-emerald-500 bg-emerald-500 text-white",
+  wrong: "border-rose-500 bg-rose-500 text-white",
+  missed: "border-emerald-500/50 bg-emerald-500/15 text-emerald-100",
 };
 
 const BADGE_CLASSES: Record<Props["state"], string> = {
   idle: "bg-slate-800 text-slate-300 group-hover:bg-slate-700",
-  correct: "bg-emerald-500 text-emerald-950",
-  wrong: "bg-rose-500 text-rose-950",
+  correct: "bg-white/25 text-white",
+  wrong: "bg-white/25 text-white",
   missed: "bg-emerald-500/80 text-emerald-950",
 };
 

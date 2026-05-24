@@ -33,20 +33,20 @@ export default function BookmarksPage() {
 
   if (mode === "solve" && bookmarked.length > 0) {
     return (
-      <>
-        <AppHeader />
-        <main className="mx-auto w-full max-w-3xl px-4 py-4 sm:py-6 flex-1">
-          <SolveFlow
-            questions={bookmarked}
-            title="Закладки"
-            subtitle={`${bookmarked.length} ${pluralize(bookmarked.length)}`}
-            resultTitle="Закладки"
-            resultSubtitle={`${bookmarked.length} ${pluralize(bookmarked.length)}`}
-            exitLabel="К закладкам"
-            onExit={() => setMode("list")}
-          />
-        </main>
-      </>
+      <main
+        className="mx-auto w-full max-w-3xl px-4 pb-3 flex-1"
+        style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top))" }}
+      >
+        <SolveFlow
+          questions={bookmarked}
+          title="Закладки"
+          subtitle={`${bookmarked.length} ${pluralize(bookmarked.length)}`}
+          resultTitle="Закладки"
+          resultSubtitle={`${bookmarked.length} ${pluralize(bookmarked.length)}`}
+          exitLabel="К закладкам"
+          onExit={() => setMode("list")}
+        />
+      </main>
     );
   }
 
